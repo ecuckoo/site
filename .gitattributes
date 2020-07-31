@@ -1,0 +1,13 @@
+* text=auto
+*.html HTML
+*.css HTML
+*.js HTML
+
+.gitignore text
+*.gitattributes text
+*.md text
+
+.gitattributes export-ignore
+.gitignore	export-ignore
+
+*.gitattributes linguist-language=gitattributes
