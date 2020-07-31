@@ -1,0 +1,20 @@
+//-  definition
+
+block variables
+    - var error
+    - var user
+
+mixin link(rel, href)
+    link(rel=rel href=href)&attributes(attributes)
+
+mixin a(href, text)
+    a(href=href)&attributes(attributes)=text
+
+mixin js(src)
+    script(src=src)&attributes(attributes)
+
+mixin input(type, name)
+    input(type=type name=name placeholder=name required='required' size=15)&attributes(attributes)
+
+mixin input1(type, name)
+    input(type=type, name=name, value=name)&attributes(attributes)

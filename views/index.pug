@@ -1,0 +1,25 @@
+//- index.pug
+
+extends layout
+
+block variables
+
+block append heads
+    script#error.
+        ! function () {} ()
+
+block append links
+    link(rel='stylesheet' class='css' href='pub/css/index.css')
+
+block content
+    // script(src='./app/index.js')
+    .index-head#index-head(data-type='index')
+        h1 This is !{title}
+    #index-list(data-type='list')
+        for e in list
+            a(href=e.title) #{e.title}, #[em #{e.time}]
+            br
+        p #[em End]
+
+block append scripts
+    script(src='pub/js/index.js')

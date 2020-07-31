@@ -1,0 +1,38 @@
+/* Express set up */
+
+var express = require('express'),
+    session = require('express-session'),
+    uuid = require('uuid'),
+    path = require('path'),
+    index = require('./routes/index'),
+    user = require('./routes/user'),
+    page = require('./routes/page'),
+    error = require('./routes/error')
+
+var app = express(),
+    pro = process.env.NODE_ENV == "production"
+
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'pug')
+
+app.use(session({
+    secret: 'eg[isfd-8yF9-7w2315df{}+Ijsli;;to8',
+    resave: true,
+    saveUninitialized: true,
+    genid: function (req) {
+	return uuid.v1()
+    }
+    // cookie: { secure: true }    
+}))
+
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use('/pub', express.static(path.join(__dirname, 'pub')))
+
+app.use(index, user, page)
+app.use(error.notfound)
+app.use(error.log)
+app.use(error.final)
+
+module.exports = app
+

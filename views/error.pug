@@ -1,0 +1,17 @@
+//- error.pug
+
+extends layout
+
+block variables
+    - var error=!0
+
+block append heads
+    style.
+        *{margin:0;padding:0}
+        html{font-size:62.5%}
+        body{margin:0 auto;font:1.4rem/2rem arial,sans-serif}
+        p{margin-bottom:1rem}
+
+block error
+    p #[b !{status}.] That's an error.
+    p !{message}.

@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+/* OEP */
+
+var app = require('../ep')
+
+var port = process.env.port || 3000,
+    host = process.env.host || '127.0.0.1',
+    option = {
+	port: port,
+    	host: host
+    }
+
+app.listen(option, () => {
+    console.log(`Server listens on port ${port}`)
+}).on('error', e => {
+    if (e.code == 'EADDRINUSE') {
+	console.log(`Error address ${host}:${port} in use`)
+    }
+})
+
+/*
+var express = require('express'),
+    app = express(),
+    https = require('https'),
+    server = https.createServer({
+        key: key,
+        cert: cert
+    }, app)
+*/

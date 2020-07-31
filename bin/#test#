@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+
+var { request } = require('http'),
+    FormData = require('form-data'),
+    fs = require('fs'),	
+    path = require('path')
+
+var file = 'post',
+    host = 'localhost',
+    port = '3000',
+    url_upload = '/upload'
+
+var files = ['local/b.png', 'local/e.png'],
+    form = new FormData()
+
+files.forEach(e => {
+    form.append('images', fs.createReadStream(e))
+})
+
+var headers =form.getHeaders(),
+    exp = /^multipart\/form-data/,
+    req = request({
+	host: host,
+	port: port,
+	path: '/upload',
+	method: 'POST',
+	headers: headers
+    })
+
+req
+    .on('response', res => {
+	var data = '',
+	    { statusCode } = res
+	
+	res.on('data', chunk => data += chunk)
+	res.on('end', () => {
+	    if (statusCode != 200) {
+		console.error('Error ' + statusCode)
+		res.resume()
+	    }
+
+	    console.log(data)
+	})
+    })
+    .on('error', e => {
+    	if (e.code == 'ECONNRESET') {
+    	    console.error('Error ECONNRESET')
+    	}
+    })
+
+form.pipe(req)
+
+// form.submit('http://localhost:3000/upload', (e, res) => {
+//     res.resume()
+// })

@@ -1,0 +1,21 @@
+//- page.pug
+
+extends layout
+
+block variables
+
+block append links
+    link(rel='stylesheet' class='css' href='pub/css/page.css')
+
+block content
+    // script(src='./app/page.js')
+    .page#page-head(data-type='data')
+        h1 !{title}
+        span #[em !{time}]
+    .page#page-body.
+        !{content}
+    .page#page-end
+        p #[em End]
+
+append scripts
+    script(src='pub/js/page.js')

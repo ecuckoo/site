@@ -1,0 +1,20 @@
+//- html body
+
+block error
+
+unless error
+    .head#head
+        span#date !{new Date()}
+        span#user-bar
+            +a('/user/' + user, '[' + user + ']')(id='user' hidden)
+            +a('/login', 'Login')(id='login')
+            +a('/logout', 'Logout')(id='logout' hidden)
+#root
+    block content
+    #login-page(hidden)
+        input.input#username(type = 'text' name='username' placeholder='username' string='username' size=15)
+        br
+        input.input#password(type='password' name='password' placeholder='password' string='password' size=15)
+        input#submit(type='button' name='submit' value='Submit')
+        input#token(type='hidden' name='token' value=token)
+        input#_user(type='hidden' name='_user' value=user)

@@ -1,0 +1,11 @@
+.page {
+    border: 1px solid gray
+}
+
+.page:not(:last-child) {
+    margin-bottom: 1rem
+}
+
+p {
+	font-size: 1.5rem;
+}

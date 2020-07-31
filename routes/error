@@ -1,0 +1,47 @@
+/* Error route */
+
+var route = require('express').Router(),
+    error = require('../lib/erroron')
+
+exports.notfound = function (req, res, next) {
+    next(error.new(404, { redirect: true }))
+}
+
+exports.log = function (e, req, res, next) {
+    if (e.stack) {
+	console.error(`\nHTTP/${req.httpVersion} ${e.status} ${e.message}\n${req.method} ${req.originalUrl}`)
+    }
+    
+    next(e)
+}
+
+exports.final = function (e, req, res, next) {
+    if (res.headersSent) {
+	next(e)
+    }
+    
+    if (!e.status) {
+	error.new(e, 500)
+    }
+
+    if (e.redirect) {
+	res.render('error', {
+	    title: `Error ${e.status}`,
+	    status: e.status,
+	    message: e.message,
+	    cache: true
+	}, (e, data) => {
+	    if (e) {
+		next(e)
+	    } else {
+		res.send(data)
+	    }
+	})
+    } else {
+	res.status(e.status).send(
+	    e.string ?
+		`${e.status} ${e.message}` :
+		{ error: e }
+	)
+    }
+}

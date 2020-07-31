@@ -1,0 +1,13 @@
+//- layout.pug
+
+include includes/global
+
+doctype html
+html
+    head
+        include includes/head
+    body
+        include includes/body
+    block scripts
+        +js('pub/js/jquery.js')(id='jq')
+        +js('pub/js/site.js')(id='bootstrap')

@@ -1,0 +1,126 @@
+/* User auth class */
+
+var crypto = require('crypto'),
+    db = require('mariadb'),
+    error = require('./erroron')
+
+module.exports = class User {
+    username
+    password
+    email
+    db_host = 'localhost'
+    db_user = 'dyad'
+    db_password = 'el'
+    db_conn_limit = 5
+    db_db = 'site'
+    db_table = 'user'
+    #key
+    salt
+    cipher
+    algorithm = 'sha512'         /* crypt algorithm */   
+    #crypted
+    #rbl = 16         /* crypt random bytes length */
+    #ic = 100          /* crypt iteration count */
+    #kl = 64          /* crypt key length */
+    #val
+    static #private
+    
+    constructor (user, prop) {
+	this.db_host = process.env.db_host || this.db_host
+	this.db_user = process.env.db_user || this.db_user
+	this.db_password = process.env.db_password || this.db_password
+	this.db_db = process.env.db_db || this.db_db
+	this.db_table = process.env.db_table || this.db_table
+	this.db_conn_limit = process.env.db_conn_limit || this.db_conn_limit
+
+	Object.values(arguments).forEach(e => {
+	    Object.keys(e).forEach(_e => {
+	    	this[_e] = e[_e]
+	    })	    
+	})
+    }
+
+    get isArray () {
+	return Array.isArray || function (e) {
+	    return Object.prototype.toString.call(e) == '[object Array]'
+	}
+    }
+    
+    get digests () {
+	return  crypto.getHashes()
+    }
+
+    get time () {
+	var e = new Date()
+	return `${e.getDate()} ${e.getMonth()} ${e.getFullYear()} ${e.getHours()}:${('0' + e.getMinutes()).slice(-2)}:${('0' + e.getSeconds()).slice(-2)}`
+    }
+
+    signup (call) {
+
+    }
+
+    login (call) {
+	var pool = db.createPool({
+	    host: this.db_host,
+	    user: this.db_user,
+	    password: this.db_password,
+	    connectionLimit: this.db_conn_limit
+	})
+
+	pool.getConnection()
+	    .then(conn => {
+		conn.query(`select id, username, password from ${this.db_db}.${this.db_table} where username = ?`, [this.username])
+		    .then(res => {
+			this.#val = res[0] ?
+			    (this.pbkdf2({ algorithm: 'sha512', salt: '' }) == res[0].password ? 
+			     void 0 : error.new(400, 'Password error', { key: 'password' })) :
+			    error.new(400, 'User does not exist', { key: 'username'})	
+			
+			call.call({}, this.#val, this)
+		    })
+		    .then(() => {
+			conn.end()
+		    })
+		    .catch(e => {
+			console.log(`\nDB query: ${e}`)
+			call.call({}, error.new(500, 'DB error'), this)
+			conn.end()
+		    })
+	    })
+	    .catch(e => {
+		console.log(`\nDB conn: ${e}`)
+		call.call({}, error.new(500, 'DB error'), this)	    
+	    })
+    }
+    
+    cipher (call, args, _this) {
+	if (typeof fn == 'function') {
+	    this.#val = this.isArray(args) ?
+		call.apply(_this || {}, args).toString('hex') :
+	    call.call(_this || {}, args).toString('hex')
+	}
+	
+	return this.#val
+    }
+
+    pbkdf2 (prop) {
+	//this.#salt = this.cipher(crypto.randomBytes, this.#rbl, crypto)
+	this.#key = crypto.pbkdf2Sync(
+	    this.password,
+	    this.salt,
+	    this.#ic,
+	    this.#kl,
+	    this.algorithm
+	).toString('hex')
+
+	return this.#crypted = !0, this.#key
+    }
+
+    valid (val, type, prop) {
+	return val == this.#key
+    }
+    
+    static privatekey () {
+	return User.#private = 42
+    }
+}

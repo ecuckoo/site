@@ -1,0 +1,26 @@
+/* Session route */
+
+exports.redirect = function (req, res) {
+    res.redirect(req.header('referrer') || '/')
+}
+
+exports.loggedin = function (req, res, next) {
+    if (req.session.user) {
+	exports.redirect(req, res)
+    } else {
+	next()
+    }
+}
+
+exports.login = function (req, res, next) {
+    // check
+    next()
+}
+
+exports.user = function (req) {
+    return req.session.user ? (req.session.user.name || '') : ''
+}
+
+exports.save = function (req, name) {
+    req.session.user = { name: name }
+}
