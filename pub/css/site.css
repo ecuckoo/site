@@ -15,7 +15,6 @@ body {
 
 div {
     overflow-wrap: break-word;
-    //border: 1px solid black
  }
 
 a {
@@ -24,13 +23,12 @@ a {
 }
 
 .head {
-    border: 1px solid black;
     width: 100%;
     //font-size: 0.75rem;
     //margin-right: 0.5rem;
     display: inline-block;
     text-align: right;
-    vetical-align: top
+    vertical-align: top
 }
 
 .head span {
@@ -53,7 +51,7 @@ a {
     display: none
 }
 
-#body {
+#root {
     position: relative;
     width: 100%;
     margin-top: 1rem

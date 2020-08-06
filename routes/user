@@ -1,6 +1,6 @@
 /* User route */
 
-var route = require('express').Router(),
+var router = require('express').Router(),
     urlencode = require('urlencode'),    
     db = require('mariadb'),
     fs = require('fs'),
@@ -21,61 +21,111 @@ var storage = multer.diskStorage({
 }),
     upload = multer({ storage: storage })
 
-route.get('/login', (req, res, next) => {
-    var token
+router.route('/login')
+    .get((req, res, next) => {
+	var token
 
-    if (req.session.token) {
-    	next(error.new(401, 'Login: Login submit repeat'))
-    } else {
-	res.set('Content-Type', 'application/json')
+	if (req.session.token) {
+    	    next(error.new(401, 'Login: Login submit repeat'))
+	} else {
+	    res.set('Content-Type', 'application/json')
 
-	token = uuid.v1()
-	req.session.token = token
-	res.status(200).send({ token: token })
+	    token = uuid.v1()
+	    req.session.token = token
+	    res.status(200).send({ token: token })
 
-	console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)	
-    }
-})
-
-route.post('/login', session.loggedin, (req, res, next) => {
-    var user,
-	agent = req.get('User-Agent'),
-	token = req.body.token,
-	userprop = {
-	    username: req.body.username,
-	    password: req.body.password
-	},
-	prop = {
-	    algorithm: 'sha512',
-	    salt: '47d482ab1701c3a7b20adb189bbac53f'
+	    console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)	
 	}
-    
-    if (agent && token != req.session.token) {
-	next(e = error.new(401, '\nSubmit: Login submit repeat'))
-    } else if (!(userprop.username && userprop.password)) {
-	next(error.new(500, { redirect: true }))
-    } else {
-	user = new User(userprop, prop)
-	user.login((e, user) => {
-	    if (e) {
-		next(e)
-	    } else {		
-		token = uuid.v1()
-		req.session.user = { name: user.username, token: token }
-		res.status(200).send({ user: user.username, token: token })
-
-		console.log(`\nUser ${user.username} in, ${user.time}`)
-		console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+    })
+    .post(session.loggedin, (req, res, next) => {
+	var user,
+	    agent = req.get('User-Agent'),
+	    token = req.body.token,
+	    userprop = {
+		username: req.body.username,
+		password: req.body.password
+	    },
+	    prop = {
+		algorithm: 'sha512',
+		salt: '47d482ab1701c3a7b20adb189bbac53f'
 	    }
-	})
-    }
+	
+	if (agent && token != req.session.token) {
+	    next(e = error.new(401, '\nSubmit: Login submit repeat'))
+	} else if (!(userprop.username && userprop.password)) {
+	    next(error.new(500, { redirect: true }))
+	} else {
+	    user = new User(userprop, prop)
+	    user.login((e, user) => {
+		if (e) {
+		    next(e)
+		} else {
+		    token = uuid.v1()
+		    req.session.user = { name: user.username, token: token }
+		    res.status(200).send({ user: user.username, token: token })
+
+		    console.log(`\nUser ${user.username} in, ${user.time}`)
+		    console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+		}
+	    })
+	}
+    })
+
+// router.get('/login', (req, res, next) => {
+//     var token
+
+//     if (req.session.token) {
+//     	next(error.new(401, 'Login: Login submit repeat'))
+//     } else {
+// 	res.set('Content-Type', 'application/json')
+
+// 	token = uuid.v1()
+// 	req.session.token = token
+// 	res.status(200).send({ token: token })
+
+// 	console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)	
+//     }
+// })
+
+// router.post('/login', session.loggedin, (req, res, next) => {
+//     var user,
+// 	agent = req.get('User-Agent'),
+// 	token = req.body.token,
+// 	userprop = {
+// 	    username: req.body.username,
+// 	    password: req.body.password
+// 	},
+// 	prop = {
+// 	    algorithm: 'sha512',
+// 	    salt: '47d482ab1701c3a7b20adb189bbac53f'
+// 	}
+    
+//     if (agent && token != req.session.token) {
+// 	next(e = error.new(401, '\nSubmit: Login submit repeat'))
+//     } else if (!(userprop.username && userprop.password)) {
+// 	next(error.new(500, { redirect: true }))
+//     } else {
+// 	user = new User(userprop, prop)
+// 	user.login((e, user) => {
+// 	    if (e) {
+// 		next(e)
+// 	    } else {
+// 		token = uuid.v1()
+// 		req.session.user = { name: user.username, token: token }
+// 		res.status(200).send({ user: user.username, token: token })
+
+// 		console.log(`\nUser ${user.username} in, ${user.time}`)
+// 		console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+// 	    }
+// 	})
+//     }
+// })
+
+router.post('/signup', (req, res, next) => {
+
 })
 
-route.post('/signup', (req, res, next) => {
-
-})
-
-route.post('/logout', (req, res, next) => {
+router.post('/logout', (req, res, next) => {
     var token = req.body.token
 
     if (token != req.session.token) {
@@ -89,11 +139,11 @@ route.post('/logout', (req, res, next) => {
     }
 })
 
-route.get('/profile', session.login, (req, res, next) => {
+router.get('/profile', session.login, (req, res, next) => {
 
 })
 
-route.post('/post', session.login, (req, res, next) => {
+router.post('/post', session.login, (req, res, next) => {
     var agent = req.get('User-Agent'),
 	token = req.body.token,
 	o = {
@@ -117,7 +167,7 @@ route.post('/post', session.login, (req, res, next) => {
     })
 })
 
-route.post('/upload', upload.array('images'), (req, res, next) => {
+router.post('/upload', upload.array('images'), (req, res, next) => {
     var files = req.files
 
     if (!files || !files.length) {
@@ -172,4 +222,4 @@ function __post (o, call) {
 	})
 }
 
-module.exports = route
+module.exports = router

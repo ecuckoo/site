@@ -1,6 +1,6 @@
 /* Index route */
 
-var route = require('express').Router(),
+var router = require('express').Router(),
     urlencode = require('urlencode'),
     db = require('mariadb'),
     fs = require('fs'),
@@ -8,7 +8,7 @@ var route = require('express').Router(),
     session = require('./session'),
     error = require('../lib/erroron')
 
-route.get('/', (req, res, next) => {
+router.get('/', (req, res, next) => {
     _loaddata(list => {
 	list.map(e => {
 	    e.title = urlencode.decode(e.title)
@@ -41,7 +41,14 @@ route.get('/', (req, res, next) => {
     })
 })
 
-route.get('/favicon.ico', (req, res, next) => {
+router.get('/user/:id', (req, res, next) => {
+    console.log(req.path)
+    console.log(req.params)
+    console.log(req.query)
+    console.log(req.body)
+})
+
+router.get('/favicon.ico', (req, res, next) => {
     //next(error.new(204))
  })
 
@@ -81,4 +88,5 @@ function _loaddata (call) {
     })
 }
 
-module.exports = route
+module.exports = router
+
