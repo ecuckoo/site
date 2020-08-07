@@ -1,0 +1,172 @@
+// User control
+
+var fs = require('fs'),
+    path = require('path'),
+    uuid = require('uuid'),
+    urlencode = require('urlencode'),    
+    db = require('mariadb'),        
+    multer = require('multer'),
+    User = require('../lib/userauth'),
+    error = require('../lib/erroron')
+
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+	cb(null, 'pub/images/')
+    },
+    filename: (req, file, cb) => {
+	cb(null, file.originalname)
+    }
+})
+
+exports.uploadfile = multer({ storage })
+
+exports.token = function (req, res, next) {
+    var token
+
+    if (req.session.token) {
+    	next(error.new(401, 'Login: Login submit repeat'))
+    } else {
+	res.set('Content-Type', 'application/json')
+
+	token = uuid.v1()
+	req.session.token = token
+	res.status(200).send({ token: token })
+
+	console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)	
+    }
+}
+
+exports.login = function (req, res, next) {
+    var user,
+	agent = req.get('User-Agent'),
+	token = req.body.token,
+	userprop = {
+	    username: req.body.username,
+	    password: req.body.password
+	},
+	prop = {
+	    algorithm: 'sha512',
+	    salt: '47d482ab1701c3a7b20adb189bbac53f'
+	}
+    
+    if (agent && token != req.session.token) {
+	next(e = error.new(401, '\nSubmit: Login submit repeat'))
+    } else if (!(userprop.username && userprop.password)) {
+	next(error.new(500, { redirect: true }))
+    } else {
+	user = new User(userprop, prop)
+	user.login((e, user) => {
+	    if (e) {
+		next(e)
+	    } else {
+		token = uuid.v1()
+		req.session.user = { name: user.username, token: token }
+		res.status(200).send({ user: user.username, token: token })
+
+		console.log(`\nUser ${user.username} in, ${user.time}`)
+		console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+	    }
+	})
+    }
+}
+
+exports.signup = function (req, res, next) {
+
+}
+
+exports.logout = function (req, res, next) {
+    var token = req.body.token
+
+    if (token != req.session.token) {
+	next(error.new(400))
+    } else {
+	delete req.session.token
+	delete req.session.user
+
+	res.status(200).send('done')
+	console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+    }
+}
+
+exports.profile = function (req, res, next) {
+
+}
+
+exports.post = function (req, res, next) {
+    var agent = req.get('User-Agent'),
+	token = req.body.token,
+	o = {
+	    user: req.body.user,
+	    title: urlencode(req.body.post.title),
+	    content: req.body.post.content,
+	    time: req.body.post.time
+	}
+
+    if (agent && token != req.session.user.token) {
+	next(error.new(401))
+    }
+
+    __post(o, (e, data) => {
+	if (e) {
+	    next(e)
+	} else {
+	    res.status(200).send(data)
+	    console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)		    
+	}
+    })
+}
+
+exports.upload = function (req, res, next) {
+    var files = req.files
+
+    if (!files || !files.length) {
+    	next(error.new(400, 'Upload failed'))
+    } else {
+	res.status(200).send('Uploaded')
+	console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)	
+    }
+}
+
+function __post (o, call) {
+    var pool = db.createPool({
+	host: 'localhost',
+	user: 'e',
+	password: 'e',
+	connectionLimit: 5
+    })
+
+    pool.getConnection()
+	.then(conn => {
+	    conn.query(`select id from site.user where username = ?`, [o.user])
+		.then(res => {
+		    if (res.length) {
+			return conn.query(`insert ignore into site.post (title, content, uid, time) values (?, ?, ?, ?)`, [o.title, o.content, res[0].id, o.time])
+		    } else {
+			return error.new(401, 'User unauthorized')
+		    }
+		})
+		.then(res => {
+		    var e, msg
+		    if (res instanceof Error) {
+			e = res
+		    } else {
+			res.affectedRows ? (msg = 'Posted') :
+			    (e = error.new(400, 'Post failed'))
+		    }
+		    
+		    call.call({}, e, msg)
+		})
+		.then(() => {
+		    conn.end()
+		})
+		.catch(e => {
+		    console.error(`\nDB query: ${e}`)
+		    call.call({}, error.new(500, 'DB error'), this)
+		    conn.end()
+		})
+	})
+	.catch(e => {
+	    console.error(`\nDB conn: ${e.description}`)
+	    call.call({}, error.new(500, 'DB error'), this)	    
+	})
+}

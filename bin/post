@@ -45,24 +45,27 @@ function __request(options, data) {
 			    if (expjson.test(restype)) {
 				data = JSON.parse(data)
 			    }
-			    
 			    if (statusCode != 200) {
 				res.resume()
 				reject(error.new(data.error.status, data.error.message))
-			    } else {
+			    }
+			    else {
 				resolve(data)
 			    }
-			} catch (e) {}
+			}
+			catch (e) {}
 		    })
 	    })
 	    .on('error', reject)
 
 	if (options.method == 'GET') {
 	    req.end()
-	} else if (data) {
+	}
+	else if (data) {
 	    if (expform.test(reqtype)) {
 		data.pipe(req)
-	    } else {
+	    }
+	    else {
 		req.write(JSON.stringify(data))
 		req.end()
 	    }
@@ -75,7 +78,8 @@ function __readfile (path, encoding, handle) {
 	fs.readFile(path, encoding, (e, data) => {
 	    if (e) {
 		reject(e)
-	    } else {
+	    }
+	    else {
 		resolve(handle ? handle(data) : data)
 	    }
 	})

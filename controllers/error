@@ -1,7 +1,6 @@
-/* Error route */
+/* Error controller */
 
-var route = require('express').Router(),
-    error = require('../lib/erroron')
+var error = require('../lib/erroron')
 
 exports.notfound = function (req, res, next) {
     next(error.new(404, { redirect: true }))
@@ -23,7 +22,7 @@ exports.final = function (e, req, res, next) {
     if (!e.status) {
 	error.new(e, 500)
     }
-
+    
     if (e.redirect) {
 	res.render('error', {
 	    title: `Error ${e.status}`,

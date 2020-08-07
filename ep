@@ -7,7 +7,7 @@ var express = require('express'),
     index = require('./routes/index'),
     user = require('./routes/user'),
     page = require('./routes/page'),
-    error = require('./routes/error')
+    error = require('./controllers/error')
 
 var app = express(),
     pro = process.env.NODE_ENV == "production"

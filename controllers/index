@@ -1,0 +1,81 @@
+/* Index controller */
+
+var urlencode = require('urlencode'),
+    db = require('mariadb'),
+    fs = require('fs'),
+    path = require('path'),
+    session = require('./session'),
+    error = require('../lib/erroron')
+
+exports.index = function (req, res, next) {
+    _loaddata(list => {
+	list.map(e => {
+	    e.title = urlencode.decode(e.title)
+	    return e
+	})
+
+    	res.render(
+	    'index',
+	    {
+		token: req.session.token,
+    		user: session.user(req),
+    		title: 'index page',
+    		list: list,
+    		cache: true
+    	    },
+	    (e, data) => {
+    		if (e) {
+    		    next(e)
+    		} else {
+    		    res.set('Content-Type', 'text/html')
+		    res.set('Cache-Control', 'no-cache')
+		    res.set('Pragma', 'no-cache')
+		    res.set('Expires', '0')
+		    
+    		    res.status(200).send(data)
+    		    console.log(`\nHTTP/${req.httpVersion} ${res.statusCode} ${res.statusMessage}\n${req.method} ${req.originalUrl}`)
+    		}
+    	    }
+	)
+    })
+}
+
+exports.favicon = function (req, res, next) {
+    
+}
+
+function _loaddata (call) {
+    var list=[],
+	pool = db.createPool({
+	    host: 'localhost',
+	    user: 'e',
+	    password: 'e',
+	    connectionLimit: 5
+	})
+    
+    pool.getConnection()
+	.then(conn => {
+	    conn.query(`select title, time from site.post where uid = (select id from site.user where username = ?) order by id desc`, ['e'])
+		.then(res => {
+		    for (var e = 0; e < res.length; e++) {
+			o = {}
+			for (var _e in res[e]) {
+			    o[_e] = res[e][_e]
+			}
+			list.push(o)
+		    }
+
+		    call.call({}, list)
+		})
+		.then(() => {
+		    conn.end()
+		})
+		.catch(e => {
+		    console.error(`\nDB query: ${e.description}`)
+		    conn.end()
+		})
+	})
+	.catch(e => {
+	    console.error(`\nDB conn: ERR ${e.description}`)
+    })
+}
