@@ -10,8 +10,10 @@ module.exports = {
     },
     output: {
  	path: path.resolve(__dirname, 'pub/js/build'),
-	filename: '[name].js'	
+	filename: '[name].js',
+	sourceMapFilename: 'sourcemaps/[file].map'
     },
+    devtool: 'source-map',
     optimization: {
 	splitChunks: {
 	    chunks: 'all',

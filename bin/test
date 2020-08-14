@@ -1,17 +1,11 @@
 #!/usr/bin/env node
 
-// (async function () {
-//   // ...module code here...
-// })()
+var events = require('events');
+var emitter = new events.EventEmitter();
+ 
+emitter.on("event-titus", function (message) {
+	console.log(message);
+})
 
+emitter.emit("event-titus", "I am titus");
 
-! function () {
-    var n = 0
-
-    f(), f()
-    
-    function f () {
-	n++
-	console.log(n)
-    }
-} ()
